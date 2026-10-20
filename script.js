@@ -1,160 +1,260 @@
-var $=function(id){return document.getElementById(id)};
-var FEEL=['Calm','Busy','Loud','Warm','Lonely'],SEAT=['Bench','Lawn','Shade','Chairs','Quiet','Water'];
-var P=[
-{id:'bryant',n:'Bryant Park',x:44,y:27,d:'Movable chairs, a big lawn and shade trees, with Midtown right behind you.',t:['Free seating','Lawn','Trees'],s:'Photo placeholder · 3:12 PM',g:['#7DB28F','#D7E8C9'],
-photos:[
-{src:'images/bryant-01-lawn.jpg',alt:'People sitting on the lawn at Bryant Park',cap:'People sitting on the lawn · 12:40 PM'},
-{src:'images/bryant-02-chairs.jpg',alt:'Green movable chairs and tables',cap:'The movable green chairs · 1:05 PM'},
-{src:'images/bryant-03-trees.jpg',alt:'Looking up through the trees',cap:'Looking up through the trees · 1:15 PM'},
-{src:'images/bryant-04-bench.jpg',alt:'A person sitting alone, seen from behind',cap:'Someone sitting alone · 3:12 PM'},
-{src:'images/bryant-05-edge.jpg',alt:'Buildings around the edge of the park',cap:'The city around the park · 3:30 PM'}],
-th:[
-['The chairs are movable, so everyone sits a little differently.','12:48 PM','Warm'],
-['The city is loud on every side, but under the trees it felt quieter.','1:10 PM','Calm'],
-['I looked up for the first time today. The leaves were still green.','1:18 PM','Calm'],
-['Most people near me were on their phones. I almost did the same.','2:40 PM','Busy'],
-['I sat alone for ten minutes. Nobody asked me to move or to buy anything.','3:15 PM','Lonely']]},
-{id:'central',n:'Central Park, Sheep Meadow',x:58,y:44,d:'Wide open grass and benches along the path. The loudest thing here is wind.',t:['Benches','Grass','Open sky'],s:'Photo placeholder · 4:05 PM',g:['#8FB8D6','#E4EFDD'],photos:[],th:[['Sample: first time all week I looked at the sky.','4:12 PM','Calm']]},
-{id:'stuy',n:'Stuyvesant Town Oval',x:76,y:71,d:'A ring of benches around a fountain, calm even when 14th St is not.',t:['Benches','Fountain','Quiet'],s:'Photo placeholder · 5:30 PM',g:['#9DB8A0','#EADFC6'],photos:[],th:[]}];
+// ── DATA ──────────────────────────────────────────────
+// Replace src with your own image paths when ready.
+// Each photo has a matching note revealed on click.
 
-var cur=P[0],store={},mine=[],ff='All',fe='',adding=false,draft=null,seat=[];
-try{store=JSON.parse(localStorage.getItem('swm')||'{}')}catch(e){}
-try{mine=JSON.parse(localStorage.getItem('swmPlaces')||'[]')}catch(e){}
-function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const MOMENTS = [
+  {
+    src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
+    alt: 'Sunlight through tree branches',
+    caption: 'Central Park, 4:11 PM',
+    time: '4:11 PM — Tuesday',
+    loc: 'Central Park, New York',
+    note: 'I sat on the bench for five minutes.\nThe world kept going, and that was okay.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80',
+    alt: 'Blue sky over the city',
+    caption: 'Midtown, 1:38 PM',
+    time: '1:38 PM — Friday',
+    loc: 'Midtown, New York',
+    note: 'The sky was so blue today.\nI almost forgot I was late.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=600&q=80',
+    alt: 'Tree shadow on pavement',
+    caption: 'Bryant Park, 3:22 PM',
+    time: '3:22 PM — Wednesday',
+    loc: 'Bryant Park, New York',
+    note: 'The shadow moved while I watched it.\nTime works differently when you stop.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=600&q=80',
+    alt: 'Sunlight on a city bench',
+    caption: 'Stuyvesant Town, 5:07 PM',
+    time: '5:07 PM — Monday',
+    loc: 'Stuyvesant Town, New York',
+    note: 'I think I have been rushing\nfor no reason.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1514565131-fce0801e6785?w=600&q=80',
+    alt: 'Wind in the leaves',
+    caption: 'Riverside Park, 2:54 PM',
+    time: '2:54 PM — Thursday',
+    loc: 'Riverside Park, New York',
+    note: 'The leaves sound like applause\nwhen the wind moves through them.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80',
+    alt: 'NYC street corner light',
+    caption: 'Lower East Side, 6:18 PM',
+    time: '6:18 PM — Saturday',
+    loc: 'Lower East Side, New York',
+    note: 'Everyone around me was moving fast.\nI was the only still thing on the block.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1522083165195-3424ed129620?w=600&q=80',
+    alt: 'Sunlight on park grass',
+    caption: 'Prospect Park, 11:43 AM',
+    time: '11:43 AM — Sunday',
+    loc: 'Prospect Park, Brooklyn',
+    note: 'My problems felt very small\ncompared to the size of the sky.'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1568515387631-8b650bbcdb90?w=600&q=80',
+    alt: 'A stoop in the afternoon',
+    caption: 'Brooklyn, 4:49 PM',
+    time: '4:49 PM — Wednesday',
+    loc: 'Carroll Gardens, Brooklyn',
+    note: 'Somebody left flowers here.\nI wonder who they were for.'
+  }
+];
 
-/* chip helper */
-function chips(box,list,multi,onChange){
-  list.forEach(function(name){
-    var b=document.createElement('button');b.type='button';b.textContent=name;b.setAttribute('aria-pressed','false');
-    b.onclick=function(){
-      if(!multi){box.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true')}
-      else b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');
-      onChange(name,b.getAttribute('aria-pressed')==='true');
-    };box.appendChild(b);
-  });
+const NOTES_TEXT = [
+  { time: '9:02 AM', text: 'I keep forgetting to look up.' },
+  { time: '12:15 PM', text: 'Three missed calls. I'm sitting here anyway.' },
+  { time: '2:30 PM', text: 'The city feels smaller when you sit still.' },
+  { time: '7:44 AM', text: 'Running late again.\nBut the light was too good to ignore.' },
+  { time: '5:55 PM', text: 'I should do this more.' },
+  { time: '3:08 PM', text: 'Nobody here is thinking about my deadlines.' },
+  { time: '1:22 PM', text: 'Wind. Just wind.\nThat was enough.' },
+  { time: '10:47 AM', text: 'The bench was warm from the morning sun.' },
+  { time: '6:31 PM', text: 'New York is actually very beautiful\nif you stop moving.' },
+  { time: '4:05 PM', text: 'I forgot what quiet felt like.' },
+  { time: '8:19 AM', text: 'A pigeon sat next to me for a while.\nWe both had nowhere to be.' },
+  { time: '2:57 PM', text: 'The world kept going.\nThat was okay.' },
+];
+
+// ── LAYOUT SEEDS ────────────────────────────────────────
+// Predefined positions so layout feels editorial, not random
+
+const PHOTO_POSITIONS = [
+  { left: '6%',  top: '8%',  w: '28vw', rot: '-2deg'  },
+  { left: '36%', top: '4%',  w: '22vw', rot: '1.5deg' },
+  { left: '62%', top: '10%', w: '26vw', rot: '-1deg'  },
+  { left: '10%', top: '44%', w: '24vw', rot: '2deg'   },
+  { left: '38%', top: '40%', w: '20vw', rot: '-2.5deg'},
+  { left: '62%', top: '48%', w: '25vw', rot: '1deg'   },
+  { left: '18%', top: '76%', w: '22vw', rot: '-1.5deg'},
+  { left: '52%', top: '78%', w: '26vw', rot: '2.5deg' },
+];
+
+const NOTE_POSITIONS = [
+  { left: '3%',  top: '5%',  rot: '-3deg',  style: ''    },
+  { left: '28%', top: '2%',  rot: '1.5deg', style: 'alt' },
+  { left: '55%', top: '6%',  rot: '-2deg',  style: 'sky' },
+  { left: '80%', top: '3%',  rot: '2.5deg', style: ''    },
+  { left: '8%',  top: '30%', rot: '2deg',   style: 'sky' },
+  { left: '33%', top: '28%', rot: '-1.5deg',style: ''    },
+  { left: '60%', top: '32%', rot: '3deg',   style: 'alt' },
+  { left: '82%', top: '30%', rot: '-2deg',  style: ''    },
+  { left: '2%',  top: '58%', rot: '1deg',   style: 'alt' },
+  { left: '25%', top: '60%', rot: '-3deg',  style: ''    },
+  { left: '52%', top: '56%', rot: '2deg',   style: 'sky' },
+  { left: '76%', top: '62%', rot: '-1.5deg',style: ''    },
+];
+
+// ── BUILD PHOTOS ─────────────────────────────────────────
+const photosLayer = document.getElementById('photosLayer');
+const notesLayer  = document.getElementById('notesLayer');
+const lightbox    = document.getElementById('lightbox');
+const lbImg       = document.getElementById('lightboxImg');
+const lbTime      = document.getElementById('lightboxTime');
+const lbText      = document.getElementById('lightboxText');
+const lbLoc       = document.getElementById('lightboxLoc');
+const lbClose     = document.getElementById('lightboxClose');
+const lbNext      = document.getElementById('lightboxNext');
+
+let currentMoment = 0;
+
+MOMENTS.forEach((m, i) => {
+  const pos = PHOTO_POSITIONS[i % PHOTO_POSITIONS.length];
+
+  const card = document.createElement('div');
+  card.className = 'photo-card';
+  card.style.cssText = `
+    left: ${pos.left};
+    top: ${pos.top};
+    width: ${pos.w};
+    aspect-ratio: 4/3;
+    transform: rotate(${pos.rot});
+  `;
+
+  const img = document.createElement('img');
+  img.src = m.src;
+  img.alt = m.alt;
+  img.loading = 'lazy';
+
+  const caption = document.createElement('div');
+  caption.className = 'photo-caption';
+  caption.textContent = m.caption;
+
+  card.appendChild(img);
+  card.appendChild(caption);
+  card.addEventListener('click', () => openLightbox(i));
+  photosLayer.appendChild(card);
+});
+
+// ── BUILD NOTES ──────────────────────────────────────────
+NOTES_TEXT.forEach((n, i) => {
+  const pos = NOTE_POSITIONS[i % NOTE_POSITIONS.length];
+
+  const card = document.createElement('div');
+  card.className = `note-card ${pos.style}`;
+  card.style.cssText = `
+    left: ${pos.left};
+    top: ${pos.top};
+    transform: rotate(${pos.rot});
+  `;
+  card.innerHTML = `
+    <span class="note-time">${n.time}</span>
+    <p class="note-text">${n.text.replace(/\n/g, '<br>')}</p>
+  `;
+
+  makeDraggable(card);
+  notesLayer.appendChild(card);
+});
+
+// Set stage min-height based on tallest photo
+function setStageHeight() {
+  const stage = document.getElementById('stage');
+  stage.style.minHeight = '260vh';
+}
+setStageHeight();
+
+// ── DRAG ─────────────────────────────────────────────────
+function makeDraggable(el) {
+  let startX, startY, origX, origY, dragging = false;
+
+  const onDown = (e) => {
+    dragging = true;
+    const point = e.touches ? e.touches[0] : e;
+    startX = point.clientX;
+    startY = point.clientY;
+    const rect = el.getBoundingClientRect();
+    const parent = el.offsetParent.getBoundingClientRect();
+    origX = rect.left - parent.left;
+    origY = rect.top  - parent.top;
+    el.style.transition = 'none';
+    el.style.zIndex = 20;
+    e.preventDefault();
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    const dx = point.clientX - startX;
+    const dy = point.clientY - startY;
+    el.style.left = (origX + dx) + 'px';
+    el.style.top  = (origY + dy) + 'px';
+  };
+
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    el.style.zIndex = 10;
+  };
+
+  el.addEventListener('mousedown',  onDown, { passive: false });
+  el.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup',  onUp);
+  window.addEventListener('touchend', onUp);
 }
 
-/* tabs */
-var tabs=document.querySelectorAll('.tabs button');
-function go(v){
-  tabs.forEach(function(b){b.setAttribute('aria-selected',b.dataset.v===v)});
-  ['explore','add','sit','notice','thought'].forEach(function(k){$('v-'+k).hidden=(k!==v)});
-}
-tabs.forEach(function(b){b.onclick=function(){stopAdd();go(b.dataset.v)}});
-document.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){go(b.dataset.go)}});
-
-/* pins + cards */
-var map=$('map'),places=$('places');
-function addPlaceUI(p){
-  var b=document.createElement('button');b.className='pin';b.style.left=p.x+'%';b.style.top=p.y+'%';
-  b.setAttribute('aria-label',p.n);b.setAttribute('aria-pressed','false');
-  b.innerHTML='<i></i><span></span>';b.querySelector('span').textContent=p.n.split(',')[0];
-  b.onclick=function(e){e.stopPropagation();if(!adding)select(p,'sit')};p.el=b;map.appendChild(b);
-  var c=document.createElement('button');c.type='button';c.setAttribute('aria-pressed','false');
-  c.innerHTML='<b></b><small></small>';c.querySelector('b').textContent=p.n;c.querySelector('small').textContent=p.t.join(' · ');
-  c.onclick=function(){select(p,'sit')};p.card=c;places.appendChild(c);
-}
-mine.forEach(function(m){m.photos=[];m.th=m.th||[];P.push(m)});
-P.forEach(addPlaceUI);
-
-/* photos */
-function setPhoto(i){
-  var p=cur,ph=p.photos[i],grad='linear-gradient(160deg,'+p.g[0]+','+p.g[1]+')',el=$('photo');
-  el.style.backgroundImage=ph?'url("'+ph.src+'"),'+grad:grad;
-  el.setAttribute('role','img');el.setAttribute('aria-label',ph?ph.alt:p.n);
-  $('stamp').textContent=ph?ph.cap:p.s;
-  if(ph){var im=new Image();im.onerror=function(){$('stamp').textContent='Image not found: '+ph.src};im.src=ph.src}
-  var tb=$('thumbs').children;for(var k=0;k<tb.length;k++)tb[k].setAttribute('aria-pressed',k===i);
+// ── LIGHTBOX ─────────────────────────────────────────────
+function openLightbox(index) {
+  currentMoment = index;
+  const m = MOMENTS[index];
+  lbImg.src    = m.src;
+  lbImg.alt    = m.alt;
+  lbTime.textContent = m.time;
+  lbText.textContent = m.note;
+  lbLoc.textContent  = m.loc;
+  lightbox.classList.add('open');
+  lightbox.setAttribute('aria-hidden', 'false');
 }
 
-/* select a place */
-function select(p,view){
-  cur=p;ff='All';
-  P.forEach(function(q){q.el.setAttribute('aria-pressed',q===p);q.card.setAttribute('aria-pressed',q===p)});
-  $('pname').textContent=p.n;$('pdesc').textContent=p.d;
-  $('ptags').innerHTML='';p.t.forEach(function(x){var s=document.createElement('span');s.textContent=x;$('ptags').appendChild(s)});
-  var th=$('thumbs');th.innerHTML='';
-  p.photos.forEach(function(ph,i){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Photo '+(i+1)+': '+ph.alt);b.style.backgroundImage='url("'+ph.src+'")';b.onclick=function(){setPhoto(i)};th.appendChild(b)});
-  setPhoto(0);
-  $('nh').textContent='Notice, at '+p.n.split(',')[0];
-  $('th').textContent='Thoughts left at '+p.n.split(',')[0];
-  buildFilter();renderThoughts();
-  if(view)go(view);
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  lightbox.setAttribute('aria-hidden', 'true');
 }
 
-/* thoughts: filter + feeling + post */
-function buildFilter(){
-  var box=$('ffilter');box.innerHTML='';
-  ['All'].concat(FEEL).forEach(function(n){
-    var b=document.createElement('button');b.type='button';b.textContent=n;b.setAttribute('aria-pressed',n===ff);
-    b.onclick=function(){ff=n;buildFilter();renderThoughts()};box.appendChild(b);
-  });
-}
-function renderThoughts(){
-  var all=cur.th.concat(store[cur.id]||[]).filter(function(x){return ff==='All'||x[2]===ff}),ul=$('plist');ul.innerHTML='';
-  if(!all.length){var e=document.createElement('li');e.textContent=ff==='All'?'No thoughts yet. Sit here and be the first.':'No '+ff.toLowerCase()+' thoughts here yet.';ul.appendChild(e)}
-  all.forEach(function(x){var li=document.createElement('li');li.textContent=x[0];var s=document.createElement('small');s.textContent=x[1]+(x[2]?' · '+x[2]:'');li.appendChild(s);ul.appendChild(li)});
-}
-chips($('feel'),FEEL,false,function(n){fe=n});
-$('tf').onsubmit=function(e){
-  e.preventDefault();var i=$('ti'),v=i.value.trim();if(!v)return;
-  var t=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-  (store[cur.id]=store[cur.id]||[]).push([v,t,fe]);save('swm',store);
-  i.value='';ff='All';buildFilter();renderThoughts();
-};
+lbClose.addEventListener('click', closeLightbox);
 
-/* add a place */
-chips($('seatChips'),SEAT,true,function(n,on){var k=seat.indexOf(n);if(on&&k<0)seat.push(n);if(!on&&k>=0)seat.splice(k,1)});
-function stopAdd(){adding=false;map.classList.remove('adding');$('hint').hidden=true;if(draft){draft.remove();draft=null}}
-$('addBtn').onclick=function(){
-  adding=true;map.classList.add('adding');$('hint').hidden=false;
-  $('an').value='';$('af').value='';seat=[];
-  $('seatChips').querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed','false')});
-  $('addStep').textContent='Tap the map to drop a pin where you sat.';go('add');
-};
-map.onclick=function(e){
-  if(!adding)return;
-  var r=map.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;
-  if(!draft){draft=document.createElement('div');draft.className='draft';map.appendChild(draft)}
-  draft.style.left=x+'%';draft.style.top=y+'%';draft.dataset.x=x;draft.dataset.y=y;
-  $('addStep').textContent='Pin placed. Name it and choose the seating.';
-};
-$('cancelBtn').onclick=function(){stopAdd();go('explore')};
-$('saveBtn').onclick=function(){
-  var name=$('an').value.trim();
-  if(!draft){$('addStep').textContent='First tap the map to drop a pin.';return}
-  if(!name){$('addStep').textContent='Give your place a name.';$('an').focus();return}
-  var t=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-  var p={id:'u'+Date.now(),n:name,x:+draft.dataset.x,y:+draft.dataset.y,d:'Added by you at '+t+'.',t:seat.length?seat.slice():['Seating'],s:name+' · '+t,g:['#9DB8A0','#EADFC6'],photos:[],th:[]};
-  var f=$('af').files[0];
-  if(f){p.photos.push({src:URL.createObjectURL(f),alt:name,cap:name+' · '+t})}
-  var rec={id:p.id,n:p.n,x:p.x,y:p.y,d:p.d,t:p.t,s:p.s,g:p.g};
-  mine.push(rec);save('swmPlaces',mine);
-  P.push(p);addPlaceUI(p);stopAdd();select(p,'sit');
-};
+lbNext.addEventListener('click', () => {
+  currentMoment = (currentMoment + 1) % MOMENTS.length;
+  openLightbox(currentMoment);
+});
 
-select(P[0]);go('explore');
+lightbox.addEventListener('click', (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
 
-/* Look up: full-screen sky + 60-second breathing circle */
-var Q=['Find the highest branch you can see.','Count how many different greens are in view.','Notice what the wind is moving.','Follow one cloud until it leaves.','Listen for the farthest sound.'],qi=0,sky=$('sky'),pr=$('prompt'),siv=null;
-function q(){pr.textContent=Q[qi%Q.length];qi++}
-function stopSky(){if(siv){clearInterval(siv);siv=null}$('scircle').classList.remove('breathe')}
-function startSky(){
-  stopSky();q();sky.classList.add('on');
-  var n=60;
-  $('scount').textContent=n;$('slabel').textContent='breathe in';
-  $('again').hidden=true;$('tothought').hidden=true;$('next').hidden=false;
-  var c=$('scircle');c.classList.remove('breathe');void c.offsetWidth;c.classList.add('breathe');
-  $('next').focus();
-  siv=setInterval(function(){
-    n--;$('scount').textContent=n;
-    $('slabel').textContent=((60-n)%8<4)?'breathe in':'breathe out';
-    if(n<=0){
-      stopSky();
-      $('scount').textContent='Done';$('slabel').textContent='welcome back';
-      $('next').hidden=true;$('again').hidden=false;$('tothought').hidden=false;
-    }
-  },1000);
-}
-function closeSky(){stopSky();sky.classList.remove('on')}
-$('openSky').onclick=startSky;$('openSky2').onclick=startSky;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowRight' && lightbox.classList.contains('open')) {
+    currentMoment = (currentMoment + 1) % MOMENTS.length;
+    openLightbox(currentMoment);
+  }
+});
