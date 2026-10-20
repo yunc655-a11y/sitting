@@ -1,108 +1,58 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sit With Me — places to pause in NYC</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOOK UP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-<header><span class="logo">Sit With Me</span><button class="btn ghost" id="openSky">Look up</button></header>
-<section class="hero">
-<h1>Where would you sit?</h1>
-<p>A map of places to pause in New York City, built by the people who sit there. Pick a spot, notice, and leave a thought. Or add a place of your own.</p>
-<div class="tabs" role="tablist" aria-label="Steps">
-<button role="tab" id="tab-explore" aria-selected="true" data-v="explore">Explore</button>
-<button role="tab" id="tab-sit" aria-selected="false" data-v="sit">Sit</button>
-<button role="tab" id="tab-notice" aria-selected="false" data-v="notice">Notice</button>
-<button role="tab" id="tab-thought" aria-selected="false" data-v="thought">Leave a thought</button>
-</div>
-</section>
-<section class="app" aria-label="Interactive map">
-<div class="map" id="map">
-<svg viewBox="0 0 500 600" preserveAspectRatio="none" aria-hidden="true">
-<path d="M170 0 L330 0 L400 160 L470 340 L400 600 L130 600 L60 430 L110 240 Z" fill="var(--bg)" opacity=".55"/>
-<g stroke="var(--bg)" stroke-width="5" fill="none"><path d="M150 120 L440 120M110 240 L460 240M90 350 L450 350M90 470 L420 470M260 0 L260 600M180 0 L150 600"/></g>
-<rect x="205" y="130" width="120" height="100" rx="6" fill="var(--park)"/>
-<rect x="265" y="262" width="62" height="44" rx="5" fill="var(--park)"/>
-<rect x="345" y="395" width="70" height="52" rx="5" fill="var(--park)"/>
-</svg>
-<div class="hint" id="hint" hidden>Tap the map to drop a pin</div>
-</div>
-<div class="panel" aria-live="polite">
 
-<div class="view" id="v-explore" role="tabpanel">
-<h2>Pick a place to pause</h2>
-<p class="pdesc">Tap a pin on the map or choose from the list.</p>
-<div class="places" id="places"></div>
-<button class="btn ghost next" id="addBtn">Add a place</button>
-</div>
+  <!-- NOISE OVERLAY -->
+  <div class="noise"></div>
 
-<div class="view" id="v-add" role="tabpanel" hidden>
-<h2>Add a place</h2>
-<p class="pdesc" id="addStep">Tap the map to drop a pin where you sat.</p>
-<label for="an" class="lbl">Name</label>
-<input id="an" maxlength="40" placeholder="e.g. Corner bench on 14th St">
-<span class="lbl">What is the seating like?</span>
-<div class="chips" id="seatChips"></div>
-<label for="af" class="lbl">Photo (optional)</label>
-<input id="af" type="file" accept="image/*">
-<div class="actions"><button class="btn" id="saveBtn">Save place</button><button class="btn ghost" id="cancelBtn">Cancel</button></div>
-</div>
+  <!-- INTRO -->
+  <section class="intro">
+    <div class="intro-tag">New York, NY</div>
+    <h1 class="intro-title">LOOK<br><em>UP</em></h1>
+    <p class="intro-sub">A little archive of things we almost missed.</p>
+    <p class="intro-desc">Photographs, thoughts, and small pauses left behind<br>by people moving through New York.</p>
+    <a class="intro-cta" href="#stage">take a little look ↓</a>
+  </section>
 
-<div class="view" id="v-sit" role="tabpanel" hidden>
-<div class="photo" id="photo"><b id="stamp"></b></div>
-<div class="thumbs" id="thumbs"></div>
-<div><h2 id="pname"></h2><p id="pdesc" class="pdesc"></p></div>
-<div class="tags" id="ptags"></div>
-<button class="btn next" data-go="notice">Next: Notice</button>
-</div>
+  <!-- MAIN STAGE -->
+  <section class="stage" id="stage">
 
-<div class="view" id="v-notice" role="tabpanel" hidden>
-<h2 id="nh"></h2>
-<p class="pdesc">Put your phone down. Try one of these, or look up for a full minute.</p>
-<ul class="prompts">
-<li>What is the farthest sound you can hear?</li>
-<li>What does your seat feel like, and who is sitting closest to you?</li>
-<li>Find one thing here you would miss if you walked past.</li>
-</ul>
-<div class="actions"><button class="btn" id="openSky3">Look up for 60 seconds</button><button class="btn ghost" data-go="thought">Next: Leave a thought</button></div>
-</div>
+    <div class="stage-label">push the thoughts away</div>
 
-<div class="view" id="v-thought" role="tabpanel" hidden>
-<h2 id="th">Thoughts left here</h2>
-<div class="chips" id="ffilter" aria-label="Filter by feeling"></div>
-<ul class="thoughts" id="plist"></ul>
-<span class="lbl">How did it feel?</span>
-<div class="chips" id="feel"></div>
-<form id="tf"><label for="ti" class="sr">Your thought</label><input id="ti" maxlength="140" placeholder="What did you notice while sitting?"><button class="btn" type="submit">Leave a thought</button></form>
-</div>
+    <!-- PHOTOS LAYER (behind) -->
+    <div class="photos-layer" id="photosLayer">
+      <!-- filled by JS -->
+    </div>
 
-</div>
-</section>
-<section class="up">
-<div><h2>Look up.</h2><p>Take sixty seconds. A full-screen sky, one small prompt, and a circle that breathes with you. Then go back to your day.</p><p><button class="btn" id="openSky2">Start looking up</button></p></div>
-<div class="tease" aria-hidden="true"></div>
-</section>
-<footer>Bryant Park photos and thoughts are examples. Replace them with your own field photos and notes.</footer>
-</div>
+    <!-- NOTES LAYER (on top, draggable) -->
+    <div class="notes-layer" id="notesLayer">
+      <!-- filled by JS -->
+    </div>
 
-<div id="sky" role="dialog" aria-modal="true" aria-label="Look up for 60 seconds">
-<p id="prompt"></p>
-<div class="orb">
-<div id="scircle"></div>
-<div class="count"><b id="scount">60</b><span id="slabel">breathe in</span></div>
-</div>
-<div class="row">
-<button class="btn" id="next">Another prompt</button>
-<button class="btn" id="again" hidden>Go again</button>
-<button class="btn" id="tothought" hidden>Leave a thought</button>
-<button class="btn ghost" id="close">Back to the map</button>
-</div>
-<svg viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 100V60q20-40 40-10t45-15 40 25 45-30 50 20 45-25 50 25 45-20 40 15V100z" fill="#0B2018"/></svg>
-</div>
-<script src="script.js"></script>
+  </section>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">✕</button>
+    <div class="lightbox-inner">
+      <img class="lightbox-img" id="lightboxImg" src="" alt="">
+      <div class="lightbox-note">
+        <div class="lightbox-time" id="lightboxTime"></div>
+        <p class="lightbox-text" id="lightboxText"></p>
+        <div class="lightbox-loc" id="lightboxLoc"></div>
+      </div>
+    </div>
+    <button class="lightbox-next" id="lightboxNext">another moment →</button>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
